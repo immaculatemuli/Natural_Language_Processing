@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBK Report Reader</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     UPLOAD PAGE
+═══════════════════════════════════════════════════════════════════ -->
+<div id="page-upload">
+
+  <!-- Institution branding -->
+  <div class="up-institution">
+    <div class="up-crest">CBK</div>
+    <span class="up-institution-name">Central Bank of Kenya</span>
+  </div>
+
+  <h1 class="up-headline">CBK Report Reader</h1>
+  <p class="up-sub">Upload any CBK monetary policy statement, quarterly review, or annual report and get a plain-language breakdown of what was decided — and what it means for you.</p>
+
+  <div id="up-alert" class="up-alert"></div>
+
+  <!-- Floating white card -->
+  <div class="upload-card">
+    <div class="upload-card-title">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Upload a Report
+    </div>
+
+    <div class="drop-box" id="drop-box">
+      <label for="pdf-input" style="display:contents;cursor:pointer;">
+        <div class="drop-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 15V3m0 12-4-4m4 4 4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
+        </div>
+        <h2>Drop your PDF here</h2>
+        <p>or click to browse from your computer</p>
+        <span class="drop-browse">Browse files</span>
+      </label>
+      <input type="file" id="pdf-input" accept=".pdf">
+      <div id="file-chosen" class="up-file-chosen"></div>
+    </div>
+
+    <div class="up-label-row">
+      <label for="report-label">Report label <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional — appears on comparison charts)</span></label>
+      <input type="text" id="report-label" placeholder="e.g. Nov 2024 MPC, 2023 Annual Report">
+    </div>
+
+    <div class="up-actions">
+      <button class="btn-analyse" id="btn-analyse" disabled>Analyse Report</button>
+      <button class="btn-clear" id="btn-clear" style="display:none;">Clear</button>
+    </div>
+  </div>
+
+  <p class="up-footer">
+    Supports CBK Monetary Policy statements, quarterly economic reviews, and annual reports.<br>
+    All processing runs locally — no data is sent to any third party.
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     LOADING OVERLAY
+═══════════════════════════════════════════════════════════════════ -->
+<div id="page-loading">
+  <div class="load-card">
+    <h3>Reading your report...</h3>
+    <div class="load-bar-track"><div class="load-bar-fill" id="load-bar"></div></div>
+    <p class="load-step" id="load-step">Extracting text from PDF</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ANALYSIS VIEW
+═══════════════════════════════════════════════════════════════════ -->
+<div id="page-app">
+
+  <div id="topbar">
+    <div class="tb-crest">CBK</div>
+    <span class="tb-brand">Report Reader</span>
+    <span class="tb-report" id="tb-report-name"></span>
+    <span class="tb-meta" id="tb-meta"></span>
+    <button class="tb-new" id="btn-add-report">+ Add Report</button>
+  </div>
+
+  <div id="tabnav">
+    <button class="tab on" data-tab="highlights">What the Report Says</button>
+    <button class="tab" data-tab="explore">Explore the Data</button>
+    <button class="tab" data-tab="ask">Ask a Question</button>
+    <button class="tab" data-tab="compare" id="tab-compare-btn" style="display:none;">
+      Compare Reports <span class="tab-badge" id="compare-badge">0</span>
+    </button>
+    <button class="tab" data-tab="nlp">NLP Breakdown</button>
+  </div>
+
+  <!-- ─── TAB 1: HIGHLIGHTS ─────────────────────────────────────── -->
+  <div id="tab-highlights" class="panel on">
+    <div class="container">
+
+      <div class="sec-eyebrow">Plain Language</div>
+      <div class="sec-heading">What does this mean for you?</div>
+      <p class="sec-sub">Based on the figures in this report — explained for everyday Kenyans, not economists. All figures are extracted directly from the document text.</p>
+
+      <div id="mw-intro" style="display:none;" class="mw-intro">
+        <div class="mw-intro-eye">Summary</div>
+        <div class="mw-intro-text" id="mw-intro-text"></div>
+      </div>
+
+      <div class="mw-grid" id="mw-grid"></div>
+
+      <p class="accuracy-note">
+        <strong>Accuracy note:</strong> Figures above are extracted by pattern-matching from the PDF text. If the report uses unusual formatting, some values may not be detected or may be inaccurate. Always cross-reference with the original document. Bank lending rate estimates assume a typical commercial bank spread of 3–5 percentage points above the CBR, based on CBK data — actual rates vary by bank, loan type, and borrower risk profile.
+      </p>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Key Numbers</div>
+      <div class="sec-heading">At a glance</div>
+      <p class="sec-sub">Headline figures extracted from the report text.</p>
+
+      <div class="figures-row">
+        <div class="fig-card">
+          <div class="fig-label">Central Bank Rate</div>
+          <div class="fig-value fv-cbr" id="fig-cbr">—</div>
+          <div class="fig-context" id="fig-cbr-ctx">The rate set by the CBK. When this rises, bank loans become more expensive.</div>
+        </div>
+        <div class="fig-card">
+          <div class="fig-label">Inflation Rate</div>
+          <div class="fig-value fv-infl" id="fig-infl">—</div>
+          <div class="fig-context" id="fig-infl-ctx">How fast prices are rising. CBK targets a band of 2.5%–7.5%.</div>
+        </div>
+        <div class="fig-card">
+          <div class="fig-label">GDP Growth</div>
+          <div class="fig-value fv-gdp" id="fig-gdp">—</div>
+          <div class="fig-context">How fast the economy is growing. Higher means more jobs and business opportunities.</div>
+        </div>
+        <div class="fig-card">
+          <div class="fig-label">Forex Reserves</div>
+          <div class="fig-value fv-fx" id="fig-fx">—</div>
+          <div class="fig-context" id="fig-fx-ctx">Kenya's foreign currency buffer. Keeps the shilling stable and funds imports.</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Report Highlights</div>
+      <div class="sec-heading">What the CBK decided and why it matters</div>
+      <p class="sec-sub">These sentences were pulled directly from the report text using semantic similarity — each answers a common question about what is happening in the economy.</p>
+
+      <div class="insights-grid" id="insights-grid"></div>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Who and What is Mentioned</div>
+      <div class="sec-heading">Key people, places, and organisations</div>
+      <div class="entity-chips-row" id="entity-chips-row"></div>
+
+    </div>
+  </div>
+
+  <!-- ─── TAB 2: EXPLORE ────────────────────────────────────────── -->
+  <div id="tab-explore" class="panel">
+    <div class="container">
+
+      <div class="sec-eyebrow">Common Phrases</div>
+      <div class="sec-heading">Topics the report keeps coming back to</div>
+      <p class="sec-sub">Word pairs and triplets that appear most frequently — a reliable signal of the report's dominant themes.</p>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-label">Common two-word phrases</div>
+          <div id="bigrams-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Common three-word phrases</div>
+          <div id="trigrams-list"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Word Usage</div>
+      <div class="sec-heading">Most frequent content words</div>
+      <p class="sec-sub">After removing common filler words, these are the terms the report uses most.</p>
+
+      <div class="card" style="margin-bottom:36px;">
+        <div class="card-label">Top 20 words (stop words excluded)</div>
+        <div id="wfreq-list"></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Named Entities</div>
+      <div class="sec-heading">Full entity breakdown</div>
+
+      <div class="card">
+        <div class="card-label">Entities by category</div>
+        <table class="ent-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th style="width:80px;text-align:right;">Count</th>
+              <th>Examples from the report</th>
+            </tr>
+          </thead>
+          <tbody id="ent-tbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── TAB 3: ASK ────────────────────────────────────────────── -->
+  <div id="tab-ask" class="panel">
+    <div class="container">
+      <div class="search-wrap">
+        <h2>Ask the Report a Question</h2>
+        <p>Type any question in plain English. We'll find the most relevant sentences from the document using semantic (meaning-based) matching — not just keyword search.</p>
+
+        <div class="search-row">
+          <input type="text" id="search-input" placeholder="e.g. What happened to the Kenyan shilling?">
+          <button class="btn-search" id="btn-search">Search</button>
+        </div>
+
+        <div class="suggestrow">
+          <span class="sugg-lbl">Try:</span>
+          <button class="sug" data-q="What is the government doing about inflation?">Inflation</button>
+          <button class="sug" data-q="What decisions were made about interest rates?">Interest rates</button>
+          <button class="sug" data-q="How is the Kenyan shilling performing?">Shilling</button>
+          <button class="sug" data-q="What is the forecast for economic growth?">Growth</button>
+          <button class="sug" data-q="What is happening with commercial bank loans?">Lending</button>
+        </div>
+
+        <div class="search-alert" id="search-alert"></div>
+        <div class="searching" id="searching">Searching the report...</div>
+        <div id="search-results"></div>
+
+        <div class="note"><strong>How this works:</strong> The search uses spaCy word vectors to compare the meaning of your question against every sentence in the report, not just exact word matches.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 4: COMPARE ───────────────────────────────────────── -->
+  <div id="tab-compare" class="panel">
+    <div class="container">
+
+      <div class="sec-eyebrow">Year-on-Year Comparison</div>
+      <div class="sec-heading">How the numbers have changed</div>
+      <p class="sec-sub">Comparing key figures across all reports you've uploaded. Add more reports using the "+ Add report" button above.</p>
+
+      <div class="reports-strip" id="reports-strip"></div>
+
+      <div class="chart-card-full">
+        <div class="chart-card-label">Percentage metrics</div>
+        <div class="chart-card-title">CBR · Inflation · GDP Growth over time</div>
+        <div class="chart-h-tall"><canvas id="chart-trend"></canvas></div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-card-label">Central Bank Rate</div>
+          <div class="chart-card-title">CBR trend</div>
+          <div class="chart-h"><canvas id="chart-cbr"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-label">Inflation</div>
+          <div class="chart-card-title">Inflation trend</div>
+          <div class="chart-h"><canvas id="chart-inf"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-label">GDP Growth</div>
+          <div class="chart-card-title">Economic growth trend</div>
+          <div class="chart-h"><canvas id="chart-gdp"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-label">Forex Reserves</div>
+          <div class="chart-card-title">Reserves trend (USD Billion)</div>
+          <div class="chart-h"><canvas id="chart-fx"></canvas></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Side-by-Side</div>
+      <div class="sec-heading">Detailed comparison table</div>
+      <div class="cmp-table-wrap">
+        <table class="cmp-table" id="cmp-table"></table>
+      </div>
+
+      <div style="text-align:right;margin-top:8px;">
+        <button class="btn-clear-history" id="btn-clear-history">Clear all reports and start fresh</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── TAB 5: NLP ────────────────────────────────────────────── -->
+  <div id="tab-nlp" class="panel">
+    <div class="container">
+
+      <div class="sec-eyebrow">NLP Pipeline — BIT4133</div>
+      <div class="sec-heading">How the text was processed</div>
+      <p class="sec-sub">A technical breakdown of the NLP steps applied to this report using NLTK and spaCy.</p>
+
+      <div class="stat-cards" id="stat-cards"></div>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Tokenisation</div>
+      <div class="sec-heading">Before and after preprocessing</div>
+      <p class="sec-sub">Stop words (the, and, is…) are removed; lemmatisation reduces words to their base form.</p>
+
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-label">Sample tokens — before and after stop-word removal</div>
+        <div class="token-cols">
+          <div>
+            <div class="token-col-label">Before (raw tokens)</div>
+            <div class="chips-wrap" id="chips-before"></div>
+          </div>
+          <div>
+            <div class="token-col-label">After (filtered tokens)</div>
+            <div class="chips-wrap" id="chips-after"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:36px;">
+        <div class="card-label">Lemmatisation examples</div>
+        <div id="lemma-pairs"></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="sec-eyebrow">Part-of-Speech Tagging</div>
+      <div class="sec-heading">Grammatical role of each word</div>
+      <p class="sec-sub">NLTK's averaged perceptron tagger — first 30 content words.</p>
+
+      <div class="card">
+        <div class="card-label">POS tags</div>
+        <table class="pos-table">
+          <thead><tr><th>#</th><th>Word</th><th>Tag</th><th>Meaning</th></tr></thead>
+          <tbody id="pos-tbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page-app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════
+
+let D = null;           // current report's full data
+let reports = [];       // all loaded reports: { label, key_figures, filename, period }
+let charts  = {};       // Chart.js instances
+
+// Palette for report pills / chart lines
+const PALETTE = ['#1B4332','#991B1B','#1E40AF','#92400E','#6B21A8','#065F46'];
+
+// ═══════════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════════
+
+function qs(id){ return document.getElementById(id); }
+function pct(v,mx){ return mx ? Math.round((v/mx)*100) : 0; }
+
+function parsePct(str){
+  if(!str || str === '—' || str === 'N/A') return null;
+  const m = str.match(/([\d.]+)/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function scoreClass(s){ return s>=0.55?'sc-high':s>=0.4?'sc-mid':'sc-low'; }
+function scoreLabel(s){ return s>=0.55?'High relevance':s>=0.4?'Moderate':'Low'; }
+
+function destroyChart(id){
+  if(charts[id]){ charts[id].destroy(); delete charts[id]; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// UPLOAD / FILE HANDLING
+// ═══════════════════════════════════════════════════════════════════════
+
+const pdfInput   = qs('pdf-input');
+const dropBox    = qs('drop-box');
+const fileChosen = qs('file-chosen');
+const btnAnalyse = qs('btn-analyse');
+const btnClear   = qs('btn-clear');
+
+pdfInput.addEventListener('change', () => {
+  if(pdfInput.files.length) setFile(pdfInput.files[0].name);
+});
+
+dropBox.addEventListener('dragover', e => { e.preventDefault(); dropBox.classList.add('over'); });
+dropBox.addEventListener('dragleave', () => dropBox.classList.remove('over'));
+dropBox.addEventListener('drop', e => {
+  e.preventDefault(); dropBox.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if(f && f.name.toLowerCase().endsWith('.pdf')){
+    const dt = new DataTransfer(); dt.items.add(f); pdfInput.files = dt.files;
+    setFile(f.name);
+  } else { showUpAlert('Please drop a PDF file.', 'err'); }
+});
+
+function setFile(name){
+  fileChosen.textContent = name;
+  fileChosen.classList.add('show');
+  btnAnalyse.disabled = false;
+  btnClear.style.display = 'inline-block';
+  // Pre-fill label from filename if empty
+  const labelEl = qs('report-label');
+  if(!labelEl.value.trim()){
+    const guess = name.replace(/\.pdf$/i,'').replace(/[_-]/g,' ').trim();
+    labelEl.placeholder = guess;
+  }
+  hideUpAlert();
+}
+
+btnClear.addEventListener('click', () => {
+  pdfInput.value = '';
+  fileChosen.textContent = '';
+  fileChosen.classList.remove('show');
+  btnAnalyse.disabled = true;
+  btnClear.style.display = 'none';
+  qs('report-label').value = '';
+  qs('report-label').placeholder = 'e.g. Nov 2024 MPC, 2023 Annual Report';
+  hideUpAlert();
+});
+
+btnAnalyse.addEventListener('click', doUpload);
+
+function showUpAlert(msg, type){
+  const el = qs('up-alert');
+  el.textContent = msg; el.className = 'up-alert show ' + type;
+}
+function hideUpAlert(){ qs('up-alert').className = 'up-alert'; }
+
+// ═══════════════════════════════════════════════════════════════════════
+// UPLOAD + ANALYSIS
+// ═══════════════════════════════════════════════════════════════════════
+
+const loadSteps = [
+  [10, 'Extracting text from PDF'],
+  [30, 'Cleaning and tokenising words'],
+  [50, 'Finding key figures'],
+  [65, 'Running report queries'],
+  [80, 'Identifying named entities'],
+  [92, 'Analysing phrases and patterns'],
+  [100,'Done'],
+];
+
+let loadTimer = null;
+
+function startLoader(){
+  let i = 0;
+  qs('load-bar').style.width = '0%';
+  qs('load-step').textContent = loadSteps[0][1];
+  loadTimer = setInterval(() => {
+    i = Math.min(i+1, loadSteps.length-1);
+    qs('load-bar').style.width = loadSteps[i][0]+'%';
+    qs('load-step').textContent = loadSteps[i][1];
+    if(i === loadSteps.length-1) clearInterval(loadTimer);
+  }, 2200);
+}
+
+function stopLoader(){ clearInterval(loadTimer); qs('load-bar').style.width='100%'; }
+
+async function doUpload(){
+  if(!pdfInput.files.length) return;
+  qs('page-loading').classList.add('show');
+  startLoader();
+
+  const fd = new FormData();
+  fd.append('pdf', pdfInput.files[0]);
+
+  try {
+    const res  = await fetch('/upload', { method:'POST', body:fd });
+    const json = await res.json();
+    stopLoader();
+    setTimeout(() => qs('page-loading').classList.remove('show'), 400);
+
+    if(json.error){ showUpAlert('Error: '+json.error, 'err'); return; }
+
+    D = json.data;
+
+    // Determine label: user input > auto-detected period > filename
+    const customLabel = qs('report-label').value.trim();
+    const label = customLabel || D.period || D.filename.replace(/\.pdf$/i,'').replace(/[_-]/g,' ');
+
+    reports.push({ label, filename: D.filename, period: D.period, key_figures: D.key_figures });
+
+    renderAll();
+    qs('page-upload').style.display = 'none';
+    qs('page-app').classList.add('show');
+    updateCompareTab();
+
+  } catch(err){
+    stopLoader();
+    setTimeout(() => qs('page-loading').classList.remove('show'), 400);
+    showUpAlert('Could not connect to the server. Make sure Flask is running on port 5000.', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+    btn.classList.add('on');
+    qs('tab-'+btn.dataset.tab).classList.add('on');
+    if(btn.dataset.tab === 'compare') renderComparison();
+  });
+});
+
+// "Add report" → go back to upload without wiping reports
+qs('btn-add-report').addEventListener('click', () => {
+  qs('page-app').classList.remove('show');
+  qs('page-upload').style.display = '';
+  resetTabs();
+  btnClear.click();
+  D = null;
+});
+
+qs('btn-clear-history').addEventListener('click', () => {
+  if(!confirm('Clear all reports and start fresh?')) return;
+  reports = [];
+  D = null;
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+  updateCompareTab();
+  qs('page-app').classList.remove('show');
+  qs('page-upload').style.display = '';
+  resetTabs();
+  btnClear.click();
+});
+
+function resetTabs(){
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('on', i===0));
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('on', i===0));
+}
+
+function updateCompareTab(){
+  const btn = qs('tab-compare-btn');
+  btn.style.display = reports.length >= 2 ? '' : 'none';
+  qs('compare-badge').textContent = reports.length;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// RENDER ALL (single report view)
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderAll(){
+  qs('tb-report-name').textContent = D.filename || 'Report';
+  qs('tb-meta').textContent =
+    (D.period ? D.period + ' · ' : '') +
+    D.page_count + ' pages · ' +
+    (D.preprocessing.original_word_count||0).toLocaleString() + ' words';
+
+  renderMwananchi();
+  renderFigures();
+  renderInsights();
+  renderEntityChips();
+  renderBigrams();
+  renderTrigrams();
+  renderWordFreq();
+  renderEntityTable();
+  renderNLP();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MWANANCHI — PLAIN LANGUAGE IMPACT
+// ═══════════════════════════════════════════════════════════════════════
+
+const MW_ICONS = {
+  loan:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>`,
+  prices:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+  economy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>`,
+  fx:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  savings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 5c-1.5 0-2.8.4-4 1-1.2.6-2.1 1.5-3 2.5-.9-1-1.8-1.9-3-2.5C7.8 5.4 6.5 5 5 5 2.8 5 1 7 1 10c0 4 3.5 7.5 8 11 1 .8 2 1.5 3 2 1-.5 2-1.2 3-2 4.5-3.5 8-7 8-11 0-3-1.8-5-4-5z"/></svg>`,
+};
+
+function mwCard(icon, title, msg, verdict, vclass){
+  const colors = { 'mv-bad':['var(--red)','var(--red-soft)'], 'mv-ok':['var(--amber)','var(--amber-soft)'], 'mv-good':['var(--green)','var(--green-soft)'] };
+  const [col, bg] = colors[vclass];
+  return `<div class="mw-card">
+    <div class="mw-icon" style="color:${col};background:${bg}">${MW_ICONS[icon]}</div>
+    <div class="mw-body">
+      <div class="mw-title">${title}</div>
+      <div class="mw-text">${msg}</div>
+      <span class="mw-verdict ${vclass}">${verdict}</span>
+    </div>
+  </div>`;
+}
+
+function renderMwananchi(){
+  const kf   = D.key_figures || {};
+  const cbr  = kf.cbr_num  != null ? kf.cbr_num  : parsePct(kf.cbr);
+  const infl = kf.inf_num  != null ? kf.inf_num  : parsePct(kf.inflation);
+  const gdp  = kf.gdp_num  != null ? kf.gdp_num  : parsePct(kf.gdp_growth);
+  const fx   = kf.fx_reserves !== 'N/A' ? kf.fx_reserves : null;
+
+  const html = [];
+
+  // ── LOANS ─────────────────────────────────────────────────────
+  // Kenya context: CBR was 7% in 2019, rose to 13% by 2024.
+  // Commercial banks add 3–5 pp spread. Regulatory floor removed in 2019.
+  if(cbr !== null){
+    const lo = (cbr + 3).toFixed(1);
+    const hi = (cbr + 5).toFixed(1);
+    let msg, verdict, vclass;
+    if(cbr >= 11){
+      msg = `The CBK rate is <strong>${kf.cbr}</strong>. Commercial banks are currently lending at approximately <strong>${lo}%–${hi}%</strong> per year (based on the typical 3–5 percentage point spread above the CBR — exact rates vary). This is restrictive by Kenyan standards. A Ksh 500,000 loan over 3 years at ${hi}% would cost roughly Ksh ${Math.round(500000*parseFloat(hi)/100*3/2).toLocaleString()} in total interest. Delay non-urgent borrowing if you can, or explore SACCOs which often lend below market rates.`;
+      verdict = 'Loans are expensive — borrow carefully'; vclass = 'mv-bad';
+    } else if(cbr >= 9){
+      msg = `The CBK rate is <strong>${kf.cbr}</strong>. Bank lending rates are roughly <strong>${lo}%–${hi}%</strong> per year. Borrowing is possible but significant. Compare rates across banks and ask about negotiated rates — the difference between lenders can save you thousands over the loan term.`;
+      verdict = 'Moderate borrowing costs'; vclass = 'mv-ok';
+    } else {
+      msg = `The CBK rate is <strong>${kf.cbr}</strong> — on the lower end of Kenya's recent range. Bank loan rates are approximately <strong>${lo}%–${hi}%</strong>. This is a relatively affordable time to borrow for productive purposes such as housing, education, or business investment.`;
+      verdict = 'Borrowing conditions are favourable'; vclass = 'mv-good';
+    }
+    html.push(mwCard('loan','Taking a Loan or Borrowing Money', msg, verdict, vclass));
+  }
+
+  // ── PRICES ────────────────────────────────────────────────────
+  // CBK target band: 2.5%–7.5% (centre: 5%)
+  if(infl !== null){
+    const grocNow  = Math.round(5000 * (1 + infl/100));
+    const salaryImpact = infl.toFixed(1);
+    let msg, verdict, vclass;
+    if(infl > 7.5){
+      msg = `Inflation is <strong>${kf.inflation}</strong> — above the CBK's upper target of 7.5%. Prices are rising faster than the government's comfort zone. A household spending Ksh 5,000 on weekly groceries last year now spends approximately <strong>Ksh ${grocNow.toLocaleString()}</strong>. If your salary has not increased by at least ${salaryImpact}%, your real purchasing power has fallen.`;
+      verdict = 'Prices above CBK target — cost of living rising'; vclass = 'mv-bad';
+    } else if(infl >= 2.5){
+      msg = `Inflation is <strong>${kf.inflation}</strong> — within the CBK's target band of 2.5%–7.5%. Prices are rising at a manageable pace. Weekly groceries costing Ksh 5,000 last year now cost approximately <strong>Ksh ${grocNow.toLocaleString()}</strong>. A modest salary increase should keep pace.`;
+      verdict = 'Inflation within CBK target range'; vclass = 'mv-good';
+    } else {
+      msg = `Inflation is <strong>${kf.inflation}</strong> — below the CBK's 2.5% lower band. Prices are very stable, which is good for purchasing power. However, very low inflation can sometimes signal weak economic demand, so the CBK may consider stimulus measures.`;
+      verdict = 'Prices very stable — below target band'; vclass = 'mv-ok';
+    }
+    html.push(mwCard('prices','Everyday Prices — Food, Fuel, and Basics', msg, verdict, vclass));
+  }
+
+  // ── ECONOMY & JOBS ────────────────────────────────────────────
+  // Kenya's potential growth estimated at 5–6% by CBK/World Bank
+  if(gdp !== null){
+    let msg, verdict, vclass;
+    if(gdp >= 5){
+      msg = `The economy grew by <strong>${kf.gdp_growth}</strong>. This is at or above Kenya's potential growth rate, which means businesses are expanding, government is collecting more tax revenue to fund services (roads, hospitals, schools), and job opportunities are increasing — particularly in manufacturing, agriculture, and services.`;
+      verdict = 'Economy growing at full potential'; vclass = 'mv-good';
+    } else if(gdp >= 3){
+      msg = `GDP growth is <strong>${kf.gdp_growth}</strong> — positive but below Kenya's potential of around 5–6%. The economy is moving forward, though not fast enough to fully absorb the estimated 800,000+ job seekers entering the market each year. Employment prospects may be tighter than the headline number suggests.`;
+      verdict = 'Economy growing but below potential'; vclass = 'mv-ok';
+    } else {
+      msg = `GDP growth is only <strong>${kf.gdp_growth}</strong>. This is well below what Kenya needs to create enough jobs for a growing population. Expect fewer hiring opportunities, tighter government budgets (less spending on public services), and businesses being more cautious about investing and expanding.`;
+      verdict = 'Economy growing too slowly'; vclass = 'mv-bad';
+    }
+    html.push(mwCard('economy','Jobs, Business, and the Economy', msg, verdict, vclass));
+  }
+
+  // ── FOREX ─────────────────────────────────────────────────────
+  if(fx){
+    const cover = kf.import_cover !== 'N/A' ? ` (equivalent to ${kf.import_cover} of import cover)` : '';
+    html.push(mwCard('fx','The Kenyan Shilling and Imports',
+      `Kenya holds <strong>${fx}</strong> in foreign exchange reserves${cover}. The CBK's minimum target is 4 months of import cover. These reserves act as a buffer that keeps the shilling stable and allows Kenya to pay for critical imports — fuel, medicine, industrial machinery, and electronics. Higher reserves generally mean less volatility in the exchange rate, which keeps imported goods prices more stable.`,
+      'Forex buffer maintained', 'mv-good'));
+  }
+
+  // ── SAVINGS ───────────────────────────────────────────────────
+  // Real return = CBR - inflation. Positive = savings grow in real terms.
+  if(cbr !== null && infl !== null){
+    const realRet = (cbr - infl).toFixed(1);
+    let msg, verdict, vclass;
+    if(parseFloat(realRet) > 2){
+      msg = `With the CBK rate at <strong>${kf.cbr}</strong> and inflation at <strong>${kf.inflation}</strong>, the real return on savings (interest rate minus inflation) is approximately <strong>${realRet}%</strong>. Money in a money market fund or fixed deposit is genuinely growing in value. Government Treasury Bills and bonds offer even higher returns — worth considering.`;
+      verdict = 'Saving is rewarding right now'; vclass = 'mv-good';
+    } else if(parseFloat(realRet) >= -1){
+      msg = `With the CBK rate at <strong>${kf.cbr}</strong> and inflation at <strong>${kf.inflation}</strong>, saving in a bank account roughly keeps pace with rising prices (real return: ~${realRet}%). Standard savings accounts may not be enough — look at money market funds or T-bills for slightly better real returns.`;
+      verdict = 'Savings barely keeping pace with inflation'; vclass = 'mv-ok';
+    } else {
+      msg = `Inflation at <strong>${kf.inflation}</strong> is outpacing typical savings returns. In real terms, money left in a standard savings account is losing value at approximately <strong>${Math.abs(realRet)}% per year</strong>. Consider moving savings into money market funds, government bonds, or productive investments to protect your purchasing power.`;
+      verdict = 'Inflation is eroding savings — act on it'; vclass = 'mv-bad';
+    }
+    html.push(mwCard('savings','Saving Money', msg, verdict, vclass));
+  }
+
+  // Summary banner
+  if(html.length){
+    const badCount  = html.filter(h => h.includes('mv-bad')).length;
+    const goodCount = html.filter(h => h.includes('mv-good')).length;
+    let summary;
+    if(badCount >= 3){
+      summary = `This report reflects a <strong>challenging economic period</strong>. High borrowing costs, rising prices, or slow growth are putting pressure on ordinary Kenyans. The breakdown below explains what each indicator means for your wallet.`;
+    } else if(goodCount >= 3){
+      summary = `This report shows a <strong>relatively positive economic picture</strong>. Key indicators are within target ranges, which means better conditions for borrowing, saving, and business. The details below break it down.`;
+    } else {
+      summary = `This report shows a <strong>mixed economic picture</strong>. Some conditions are favourable, others are under pressure. Read each card below to understand how specific decisions affect you.`;
+    }
+    qs('mw-intro-text').innerHTML = summary;
+    qs('mw-intro').style.display = '';
+  }
+
+  qs('mw-grid').innerHTML = html.length ? html.join('') :
+    '<p style="color:var(--ink-3);font-size:0.875rem;">Key figures could not be extracted from this report. Try the "Ask a Question" tab to find specific information.</p>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HIGHLIGHTS — FIGURES & INSIGHTS
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderFigures(){
+  const kf = D.key_figures || {};
+  qs('fig-cbr').textContent  = kf.cbr         !== 'N/A' ? kf.cbr         : '—';
+  qs('fig-infl').textContent = kf.inflation    !== 'N/A' ? kf.inflation   : '—';
+  qs('fig-gdp').textContent  = kf.gdp_growth   !== 'N/A' ? kf.gdp_growth  : '—';
+  qs('fig-fx').textContent   = kf.fx_reserves  !== 'N/A' ? kf.fx_reserves : '—';
+  if(kf.import_cover && kf.import_cover !== 'N/A'){
+    qs('fig-fx-ctx').textContent = 'Kenya\'s foreign currency buffer ('+kf.import_cover+' of import cover). Keeps the shilling stable and funds imports.';
+  }
+}
+
+const INSIGHT_META = {
+  interest_rate: 'Interest Rates',
+  inflation:     'Inflation & Prices',
+  gdp_growth:    'Economic Growth',
+  forex:         'Foreign Exchange',
+  banking:       'Banking Sector',
+  government:    'Government Policy',
+  credit:        'Credit & Lending',
+  employment:    'Jobs & Employment',
+};
+
+function renderInsights(){
+  const grid = qs('insights-grid');
+  const ai   = D.auto_insights || {};
+  let html = '';
+  Object.keys(INSIGHT_META).forEach(key => {
+    const e = ai[key];
+    if(!e) return;
+    html += `<div class="insight-card">
+      <div class="insight-topic">${INSIGHT_META[key]}</div>
+      <div class="insight-text">${e.sentence}</div>
+    </div>`;
+  });
+  grid.innerHTML = html || '<p style="color:var(--ink-3);font-size:0.875rem;grid-column:1/-1;">No highlights could be extracted from this report. Try the search tab.</p>';
+}
+
+const ENT_LABEL_MAP = { PERSON:'People', ORG:'Organisations', GPE:'Countries & Places', DATE:'Dates', PERCENT:'Percentages', MONEY:'Monetary Figures', CARDINAL:'Numbers' };
+
+function renderEntityChips(){
+  const row = qs('entity-chips-row');
+  const ne  = D.named_entities || {};
+  let html  = '';
+  ['ORG','GPE','PERSON','DATE','PERCENT','MONEY'].forEach(lbl => {
+    const e = ne[lbl];
+    if(!e || !e.count) return;
+    html += `<div class="entity-group">
+      <div class="entity-group-label">${ENT_LABEL_MAP[lbl]}</div>
+      <div class="entity-chips">${(e.examples||[]).map(x=>`<span class="echip">${x}</span>`).join('')}</div>
+    </div>`;
+  });
+  row.innerHTML = html || '<p style="color:var(--ink-3);font-size:0.875rem;">No named entities found.</p>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EXPLORE
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderPhraseList(id, items){
+  const el = qs(id);
+  if(!items||!items.length){ el.innerHTML='<p style="color:var(--ink-3);font-size:0.875rem;">No data.</p>'; return; }
+  const max = items[0].count;
+  el.innerHTML = items.map((it,i)=>`
+    <div class="phrase-item">
+      <span class="ph-rank">${i+1}</span>
+      <span class="ph-text">${it.phrase}</span>
+      <div class="ph-bar-wrap"><div class="ph-bar-bg"><div class="ph-bar-fill" style="width:${pct(it.count,max)}%"></div></div></div>
+      <span class="ph-ct">${it.count}</span>
+    </div>`).join('');
+}
+
+function renderBigrams(){  renderPhraseList('bigrams-list',  (D.ngrams||{}).bigrams);  }
+function renderTrigrams(){ renderPhraseList('trigrams-list', (D.ngrams||{}).trigrams); }
+
+function renderWordFreq(){
+  const list = D.word_frequency || [];
+  const el   = qs('wfreq-list');
+  if(!list.length){ el.innerHTML=''; return; }
+  const max = list[0].count;
+  el.innerHTML = list.slice(0,20).map((it,i)=>`
+    <div class="wfreq-item">
+      <span class="wf-rank">${i+1}</span>
+      <span class="wf-word">${it.word}</span>
+      <div class="wf-bar"><div class="wf-bg"><div class="wf-fill" style="width:${pct(it.count,max)}%"></div></div></div>
+      <span class="wf-count">${it.count}</span>
+    </div>`).join('');
+}
+
+function renderEntityTable(){
+  const ne = D.named_entities || {};
+  qs('ent-tbody').innerHTML = ['PERSON','ORG','GPE','DATE','PERCENT','MONEY','CARDINAL'].map(lbl=>{
+    const e = ne[lbl]; if(!e) return '';
+    const chips = (e.examples||[]).map(x=>`<span class="ex-chip">${x}</span>`).join('');
+    return `<tr>
+      <td><span class="etag et-${lbl}">${ENT_LABEL_MAP[lbl]||lbl}</span></td>
+      <td>${e.count||0}</td>
+      <td><div class="ex-chips">${chips||'—'}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// COMPARISON TAB
+// ═══════════════════════════════════════════════════════════════════════
+
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.color = '#888888';
+
+const CHART_DEFAULTS = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend:{ display:false }, tooltip:{ callbacks:{
+    label: ctx => ' ' + ctx.parsed.y + '%'
+  }}},
+  scales:{
+    x:{ grid:{ color:'#F4F4F0' } },
+    y:{ grid:{ color:'#F4F4F0' }, ticks:{ callback: v => v+'%' } }
+  }
+};
+
+function makeLineChart(canvasId, labels, dataset, color){
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{ label:dataset.label, data:dataset.data, borderColor:color,
+        backgroundColor: color+'22', tension:0.35, pointRadius:5,
+        pointBackgroundColor:color, fill:true }]
+    },
+    options:{ ...CHART_DEFAULTS,
+      plugins:{ ...CHART_DEFAULTS.plugins, tooltip:{ callbacks:{ label: ctx => ' '+ctx.parsed.y+dataset.unit }}} ,
+      scales:{ x:{ grid:{ color:'#F4F4F0' }}, y:{ grid:{ color:'#F4F4F0' }, ticks:{ callback: v => v+dataset.unit }}}
+    }
+  });
+}
+
+function makeBarChart(canvasId, labels, dataset, color){
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{ label:dataset.label, data:dataset.data, backgroundColor:color+'55', borderColor:color, borderWidth:1.5, borderRadius:4 }]
+    },
+    options:{ ...CHART_DEFAULTS,
+      plugins:{ ...CHART_DEFAULTS.plugins, tooltip:{ callbacks:{ label: ctx => ' '+ctx.parsed.y+dataset.unit }}},
+      scales:{ x:{ grid:{ color:'#F4F4F0' }}, y:{ grid:{ color:'#F4F4F0' }, ticks:{ callback: v => v+dataset.unit }}}
+    }
+  });
+}
+
+function makeTrendChart(canvasId, labels, datasets){
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:true, position:'top', labels:{ usePointStyle:true, boxWidth:8, padding:18 }},
+        tooltip:{ callbacks:{ label: ctx => ' '+ctx.dataset.label+': '+ctx.parsed.y+'%' }}},
+      scales:{
+        x:{ grid:{ color:'#F4F4F0' }},
+        y:{ grid:{ color:'#F4F4F0' }, ticks:{ callback: v => v+'%' }}
+      }
+    }
+  });
+}
+
+function renderComparison(){
+  if(reports.length < 2) return;
+
+  const labels = reports.map(r => r.label);
+
+  // Pills
+  qs('reports-strip').innerHTML = reports.map((r,i) => `
+    <div class="report-pill">
+      <div class="pill-dot" style="background:${PALETTE[i%PALETTE.length]}"></div>
+      ${r.label}
+      <button class="pill-rm" onclick="removeReport(${i})" title="Remove">×</button>
+    </div>`).join('') +
+    `<button class="btn-clear-history" onclick="qs('btn-add-report').click()" style="margin-left:4px;">+ Add report</button>`;
+
+  // Data extraction
+  const cbrData = reports.map(r => r.key_figures.cbr_num ?? parsePct(r.key_figures.cbr));
+  const infData = reports.map(r => r.key_figures.inf_num ?? parsePct(r.key_figures.inflation));
+  const gdpData = reports.map(r => r.key_figures.gdp_num ?? parsePct(r.key_figures.gdp_growth));
+  const fxData  = reports.map(r => r.key_figures.res_num ?? parsePct(r.key_figures.fx_reserves));
+
+  // Combined trend chart
+  const trendDatasets = [];
+  if(cbrData.some(v=>v!=null)) trendDatasets.push({ label:'Central Bank Rate', data:cbrData, borderColor:'#1B4332', backgroundColor:'#1B433222', tension:0.35, pointRadius:5, pointBackgroundColor:'#1B4332', fill:false });
+  if(infData.some(v=>v!=null)) trendDatasets.push({ label:'Inflation', data:infData, borderColor:'#991B1B', backgroundColor:'#991B1B22', tension:0.35, pointRadius:5, pointBackgroundColor:'#991B1B', fill:false });
+  if(gdpData.some(v=>v!=null)) trendDatasets.push({ label:'GDP Growth', data:gdpData, borderColor:'#1E40AF', backgroundColor:'#1E40AF22', tension:0.35, pointRadius:5, pointBackgroundColor:'#1E40AF', fill:false });
+  makeTrendChart('chart-trend', labels, trendDatasets);
+
+  // Individual charts
+  if(cbrData.some(v=>v!=null)) makeLineChart('chart-cbr', labels, { label:'Central Bank Rate', data:cbrData, unit:'%' }, '#1B4332');
+  if(infData.some(v=>v!=null)) makeLineChart('chart-inf', labels, { label:'Inflation', data:infData, unit:'%' }, '#991B1B');
+  if(gdpData.some(v=>v!=null)) makeLineChart('chart-gdp', labels, { label:'GDP Growth', data:gdpData, unit:'%' }, '#1E40AF');
+  if(fxData.some(v=>v!=null))  makeBarChart('chart-fx',  labels, { label:'Forex Reserves', data:fxData, unit:'B' }, '#92400E');
+
+  // Comparison table
+  const first = reports[0], last = reports[reports.length-1];
+
+  function delta(key, isGoodDown){
+    const a = reports[0].key_figures[key+'_num'] ?? parsePct(reports[0].key_figures[key==='res'?'fx_reserves':key==='inf'?'inflation':key==='gdp'?'gdp_growth':'cbr']);
+    const b = reports[reports.length-1].key_figures[key+'_num'] ?? parsePct(reports[reports.length-1].key_figures[key==='res'?'fx_reserves':key==='inf'?'inflation':key==='gdp'?'gdp_growth':'cbr']);
+    if(a==null||b==null) return '<td class="delta-neutral">—</td>';
+    const diff = (b-a).toFixed(1);
+    const sign = diff>0?'+':'';
+    const cl = diff==0?'delta-neutral': isGoodDown ? (diff<0?'delta-neg':'delta-pos') : (diff>0?'delta-gdp-pos':'delta-gdp-neg');
+    return `<td class="${cl}">${sign}${diff}%</td>`;
+  }
+
+  let thead = '<thead><tr><th>Metric</th>';
+  reports.forEach(r => { thead += `<th>${r.label}</th>`; });
+  if(reports.length >= 2) thead += '<th>Change</th>';
+  thead += '</tr></thead>';
+
+  function row(metricLabel, kfKey, numKey, unit, isGoodDown){
+    let tr = `<tr><td>${metricLabel}</td>`;
+    reports.forEach(r => {
+      const v = r.key_figures[kfKey];
+      tr += `<td>${v !== 'N/A' ? v : '—'}</td>`;
+    });
+    if(reports.length >= 2) tr += delta(numKey, isGoodDown);
+    return tr + '</tr>';
+  }
+
+  const tbody = `<tbody>
+    ${row('Central Bank Rate','cbr','cbr','%',true)}
+    ${row('Inflation','inflation','inf','%',true)}
+    ${row('GDP Growth','gdp_growth','gdp','%',false)}
+    ${row('Forex Reserves','fx_reserves','res','B',false)}
+    ${row('Import Cover','import_cover','','',false)}
+  </tbody>`;
+
+  qs('cmp-table').innerHTML = thead + tbody;
+}
+
+function removeReport(i){
+  reports.splice(i,1);
+  updateCompareTab();
+  if(reports.length < 2){
+    // Switch away from compare tab
+    resetTabs();
+  } else {
+    renderComparison();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════════════════════════
+
+const searchInput  = qs('search-input');
+const searchAlert  = qs('search-alert');
+const searchingDiv = qs('searching');
+const resultsDiv   = qs('search-results');
+
+qs('btn-search').addEventListener('click', doSearch);
+searchInput.addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+
+document.querySelectorAll('.sug').forEach(b => {
+  b.addEventListener('click', () => {
+    searchInput.value = b.dataset.q;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+    document.querySelector('[data-tab="ask"]').classList.add('on');
+    qs('tab-ask').classList.add('on');
+    doSearch();
+  });
+});
+
+async function doSearch(){
+  const q = searchInput.value.trim();
+  if(!q){ searchAlert.textContent='Please type a question first.'; searchAlert.className='search-alert show err'; return; }
+  searchAlert.className='search-alert';
+  resultsDiv.innerHTML='';
+  searchingDiv.classList.add('show');
+
+  try {
+    const res  = await fetch('/search',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:q}) });
+    const json = await res.json();
+    searchingDiv.classList.remove('show');
+
+    if(json.error){ searchAlert.textContent=json.error; searchAlert.className='search-alert show err'; return; }
+    if(!json.results||!json.results.length){ resultsDiv.innerHTML='<p style="color:var(--ink-3);">No relevant sentences found. Try rephrasing your question.</p>'; return; }
+
+    resultsDiv.innerHTML = json.results.map((r,i)=>`
+      <div class="result-card">
+        <div class="result-head">
+          <span class="result-num">Result ${i+1}</span>
+          <span class="score-badge ${scoreClass(r.score)}">${scoreLabel(r.score)}</span>
+        </div>
+        <div class="result-body">${r.sentence}</div>
+      </div>`).join('');
+  } catch(err){
+    searchingDiv.classList.remove('show');
+    searchAlert.textContent='Search failed. Make sure the Flask server is running.';
+    searchAlert.className='search-alert show err';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NLP TAB
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderNLP(){
+  const pp = D.preprocessing||{};
+  qs('stat-cards').innerHTML = [
+    { num:(pp.original_word_count||0).toLocaleString(), lbl:'Total words' },
+    { num:(pp.token_count||0).toLocaleString(),         lbl:'Alpha tokens' },
+    { num:(pp.stopwords_removed||0).toLocaleString(),   lbl:'Stop words removed' },
+    { num:(pp.filtered_count||0).toLocaleString(),      lbl:'Content tokens' },
+  ].map(s=>`<div class="stat-card"><div class="sc-num">${s.num}</div><div class="sc-label">${s.lbl}</div></div>`).join('');
+
+  qs('chips-before').innerHTML = (pp.before_examples||[]).map(w=>`<span class="chip chip-raw">${w}</span>`).join('');
+  qs('chips-after').innerHTML  = (pp.after_examples||[]).map(w=>`<span class="chip chip-clean">${w}</span>`).join('');
+  qs('lemma-pairs').innerHTML  = (pp.lemma_examples||[]).map(p=>`
+    <div class="lemma-pair"><span class="chip chip-from">${p.original}</span><span class="lemma-arr">→</span><span class="chip chip-to">${p.lemma}</span></div>`).join('');
+  qs('pos-tbody').innerHTML    = (D.pos_tags||[]).map((p,i)=>`
+    <tr><td>${i+1}</td><td>${p.word}</td><td><span class="pos-tag">${p.tag}</span></td><td>${p.meaning}</td></tr>`).join('');
+}
+</script>
+</body>
+</html>

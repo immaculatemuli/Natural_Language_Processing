@@ -1,0 +1,5 @@
+flask
+nltk
+spacy
+PyPDF2
+numpy
