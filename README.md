@@ -114,5 +114,7 @@ Natural_Language_Processing/
 │   └── Week_4_Mandatory_Tasks.ipynb
 ├── Week_5/
 │   └── Week_5_Chatbot.ipynb
+└── NLP-LOGBOOK.docx
 └── README.md
+
 ```
