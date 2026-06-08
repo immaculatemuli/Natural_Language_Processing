@@ -19,7 +19,7 @@ An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024
 
 ## Weekly Tasks
 
-> ⚠️ GitHub cannot preview `.ipynb` files — click **Open in Colab** to view the full notebook with outputs.
+> ⚠️If GitHub cannot preview `.ipynb` files — click **Open in Colab** to view the full notebook with outputs.
 
 ---
 
@@ -115,6 +115,7 @@ Natural_Language_Processing/
 ├── Week_5/
 │   └── Week_5_Chatbot.ipynb
 └── NLP-LOGBOOK.docx
+└── Project
 └── README.md
 
 ```
