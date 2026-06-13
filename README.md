@@ -6,20 +6,19 @@
 **Lecturer:** Mr. Michael Nyoro  
 **Semester:** Fourth Year  
 
-
 ---
 
 ## Project — CBK Report Analyser
 
-An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024/25** using text processing, language modeling, sequence labeling, and deep learning techniques.
+An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024/25** using text processing, language modeling, sequence labeling, word embeddings, and deep learning techniques.
 
-**Technologies:** Python · NLTK · spaCy · Gensim (Word2Vec) · pdfplumber · pandas · matplotlib · Google Colab
+**Technologies:** Python · NLTK · spaCy · Gensim (Word2Vec, FastText) · pdfplumber · pandas · matplotlib · scikit-learn · Google Colab
 
 ---
 
 ## Weekly Tasks
 
-> ⚠️If GitHub cannot preview `.ipynb` files — click **Open in Colab** to view the full notebook with outputs.
+> ⚠️ If GitHub cannot preview `.ipynb` files — click **Open in Colab** to view the full notebook with outputs.
 
 ---
 
@@ -97,6 +96,31 @@ An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024
 
 ---
 
+### Week 6 — Word Embeddings and Distributed Representations
+
+| Task | File |
+|------|------|
+| Class Work | [Week6_Class_Work.ipynb](./Week_6/Week6_Class_Work.ipynb) |
+| Practical Tasks | [Week6_Practical_Tasks.ipynb](./Week_6/Week6_Practical_Tasks.ipynb) |
+| Advanced Task | [Week6_Advanced_Task.ipynb](./Week_6/Week6_Advanced_Task.ipynb) |
+| Challenge Task | [Week6_Challenge_Task.ipynb](./Week_6/Week6_Challenge_Task.ipynb) |
+| Creative Task | [Week6_Creative_Task.ipynb](./Week_6/Week6_Creative_Task.ipynb) |
+
+**Topics covered:**
+- Word embeddings vs One-Hot Encoding
+- Word2Vec — CBOW and Skip-Gram architectures
+- Training Word2Vec on the CBK Annual Report 2024/25
+- Semantic similarity and word analogy reasoning
+- PCA and t-SNE visualisation of word clusters
+- Economic domain analysis (Monetary Policy, Banking, Forex, Growth, Fiscal, Markets)
+- **Challenge Task:** Modern embeddings — Transformers, BERT, GPT, and LLMs vs Word2Vec
+- **Creative Task (New Concept):** FastText subword embeddings + CBK Semantic Search Engine
+
+**Creative Task — CBK Semantic Intelligence Engine:**  
+Consolidates all Week 6 concepts into one system. Trains three models (Word2Vec CBOW, Word2Vec Skip-Gram, FastText) on the full CBK Annual Report. Introduces FastText as a new concept not taught in class — a subword embedding model that handles unknown words by breaking them into character n-grams. Features a live interactive semantic search engine where the user types any question about the CBK report and receives the most relevant sentences from the report using cosine similarity.
+
+---
+
 ## Repo Structure
 
 ```
@@ -114,8 +138,12 @@ Natural_Language_Processing/
 │   └── Week_4_Mandatory_Tasks.ipynb
 ├── Week_5/
 │   └── Week_5_Chatbot.ipynb
-└── NLP-LOGBOOK.docx
-└── Project
+├── Week_6/
+│   ├── Week6_Class_Work.ipynb
+│   ├── Week6_Practical_Tasks.ipynb
+│   ├── Week6_Advanced_Task.ipynb
+│   ├── Week6_Challenge_Task.ipynb
+│   └── Week6_Creative_Task.ipynb
+├── NLP-LOGBOOK.docx
 └── README.md
-
 ```
