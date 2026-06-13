@@ -108,16 +108,16 @@ An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024
 
 **Topics covered:**
 - Word embeddings vs One-Hot Encoding
-- Word2Vec — CBOW and Skip-Gram architectures
+- Word2Vec - CBOW and Skip-Gram architectures
 - Training Word2Vec on the CBK Annual Report 2024/25
 - Semantic similarity and word analogy reasoning
 - PCA and t-SNE visualisation of word clusters
 - Economic domain analysis (Monetary Policy, Banking, Forex, Growth, Fiscal, Markets)
-- **Challenge Task:** Modern embeddings — Transformers, BERT, GPT, and LLMs vs Word2Vec
+- **Challenge Task:** Modern embeddings - Transformers, BERT, GPT, and LLMs vs Word2Vec
 - **Creative Task (New Concept):** FastText subword embeddings + CBK Semantic Search Engine
 
-**Creative Task — CBK Semantic Intelligence Engine:**  
-Consolidates all Week 6 concepts into one system. Trains three models (Word2Vec CBOW, Word2Vec Skip-Gram, FastText) on the full CBK Annual Report. Introduces FastText as a new concept not taught in class — a subword embedding model that handles unknown words by breaking them into character n-grams. Features a live interactive semantic search engine where the user types any question about the CBK report and receives the most relevant sentences from the report using cosine similarity.
+**Creative Task - CBK Semantic Intelligence Engine:**  
+Consolidates all Week 6 concepts into one system. Trains three models (Word2Vec CBOW, Word2Vec Skip-Gram, FastText) on the full CBK Annual Report. Introduces FastText as a new concept not taught in class a subword embedding model that handles unknown words by breaking them into character n-grams. Features a live interactive semantic search engine where the user types any question about the CBK report and receives the most relevant sentences from the report using cosine similarity.
 
 ---
 
