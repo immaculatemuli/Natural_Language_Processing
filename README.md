@@ -12,7 +12,7 @@
 
 An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024/25** using text processing, language modeling, sequence labeling, word embeddings, and deep learning techniques.
 
-**Technologies:** Python · NLTK · spaCy · Gensim (Word2Vec, FastText) · pdfplumber · pandas · matplotlib · scikit-learn · Google Colab
+**Technologies:** Python · NLTK · spaCy · Gensim (Word2Vec, FastText) · pdfplumber · pandas · matplotlib · scikit-learn · TensorFlow · Google Colab
 
 ---
 
@@ -117,7 +117,29 @@ An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024
 - **Creative Task (New Concept):** FastText subword embeddings + CBK Semantic Search Engine
 
 **Creative Task - CBK Semantic Intelligence Engine:**  
-Consolidates all Week 6 concepts into one system. Trains three models (Word2Vec CBOW, Word2Vec Skip-Gram, FastText) on the full CBK Annual Report. Introduces FastText as a new concept not taught in class a subword embedding model that handles unknown words by breaking them into character n-grams. Features a live interactive semantic search engine where the user types any question about the CBK report and receives the most relevant sentences from the report using cosine similarity.
+Consolidates all Week 6 concepts into one system. Trains three models (Word2Vec CBOW, Word2Vec Skip-Gram, FastText) on the full CBK Annual Report. Introduces FastText as a new concept not taught in class — a subword embedding model that handles unknown words by breaking them into character n-grams. Features a live interactive semantic search engine where the user types any question about the CBK report and receives the most relevant sentences from the report using cosine similarity.
+
+---
+
+### Week 7 — Neural Language Models
+
+| Task | File | View |
+|------|------|------|
+| Class Work | [Week7_Class_Work.ipynb](./Week_7/Week7_Class_Work.ipynb) | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1jUl6a9R9uBK_2dWXKpA8IdbNB-6DEM-N) |
+| Practical Tasks | [Week7_Practical_Tasks.ipynb](./Week_7/Week7_Practical_Tasks.ipynb) | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1j_Z9bcBbPcvQbMwlfvl2dyNYK-m5mguZ) |
+| Advanced Task | [Week7_Advanced_Task.ipynb](./Week_7/Week7_Advanced_Task.ipynb) | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1msyLBVUBo1tnSIOBM2JNQw81jREKIigg) |
+
+
+**Topics covered:**
+- Neural network structure — Input, Hidden, and Output layers
+- Tokenization and converting text into numerical sequences
+- Embedding layers learned inside a neural network
+- LSTM (Long Short-Term Memory) for sequence prediction
+- Training a next-word prediction model on the CBK Annual Report 2024/25
+- N-Gram Models vs Neural Language Models comparison
+
+**Advanced Task — Mini Predictive Text Application:**  
+Trained on the full CBK Annual Report. Accepts any sentence fragment typed by the user, predicts the top 3 most likely next words with confidence scores, and runs as an interactive loop.
 
 ---
 
@@ -144,6 +166,10 @@ Natural_Language_Processing/
 │   ├── Week6_Advanced_Task.ipynb
 │   ├── Week6_Challenge_Task.ipynb
 │   └── Week6_Creative_Task.ipynb
+├── Week_7/
+│   ├── Week7_Class_Work.ipynb
+│   ├── Week7_Practical_Tasks.ipynb
+│   ├── Week7_Advanced_Task.ipynb
 ├── NLP-LOGBOOK.docx
 └── README.md
 ```
