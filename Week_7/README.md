@@ -1,10 +1,10 @@
 ### Week 7 — Neural Language Models
 
-| Task | File |
-|------|------|
-| Class Work | [Week7_Class_Work.ipynb](./Week_7/Week7_Class_Work.ipynb) |
-| Practical Tasks | [Week7_Practical_Tasks.ipynb](./Week_7/Week7_Practical_Tasks.ipynb) |
-| Advanced Task | [Week7_Advanced_Task.ipynb](./Week_7/Week7_Advanced_Task.ipynb) |
+| Task | File | View |
+|------|------|------|
+| Class Work | [Week7_Class_Work.ipynb](./Week_7/Week7_Class_Work.ipynb) | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1jUl6a9R9uBK_2dWXKpA8IdbNB-6DEM-N) |
+| Practical Tasks | [Week7_Practical_Tasks.ipynb](./Week_7/Week7_Practical_Tasks.ipynb) | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1j_Z9bcBbPcvQbMwlfvl2dyNYK-m5mguZ) |
+| Advanced Task | [Week7_Advanced_Task.ipynb](./Week_7/Week7_Advanced_Task.ipynb) | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1msyLBVUBo1tnSIOBM2JNQw81jREKIigg) |
 
 **Topics covered:**
 - Neural network structure — Input, Hidden, and Output layers
