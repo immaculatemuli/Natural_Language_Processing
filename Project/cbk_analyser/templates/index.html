@@ -835,43 +835,6 @@ function renderAll() {
 }
 
 // ════════════════════════════════════════════════
-// ECONOMIC TICKER
-// ════════════════════════════════════════════════
-
-function renderTicker() {
-  const kf     = D.key_figures || {};
-  const period = D.period || D.filename?.replace(/\.pdf$/i,'') || '';
-
-  const items = [
-    { name: 'CBR',            val: kf.cbr,          trend: 'neut' },
-    { name: 'Inflation',      val: kf.inflation,     trend: kf.inf_num > 7.5 ? 'down' : kf.inf_num > 0 ? 'neut' : 'neut' },
-    { name: 'GDP Growth',     val: kf.gdp_growth,    trend: kf.gdp_num >= 5 ? 'up' : kf.gdp_num > 0 ? 'neut' : 'neut' },
-    { name: 'Forex Reserves', val: kf.fx_reserves,   trend: 'neut' },
-    { name: 'Import Cover',   val: kf.import_cover,  trend: 'neut' },
-    { name: 'Report Period',  val: period,            trend: 'neut' },
-  ].filter(it => it.val && it.val !== 'N/A' && it.val !== 'N/A months' && it.val !== 'N/A%');
-
-  if (!items.length) return;
-
-  const trendIcon = t =>
-    t === 'up'   ? '<span class="t-up">▲</span>'   :
-    t === 'down' ? '<span class="t-down">▼</span>'  :
-                   '<span class="t-neut">•</span>';
-
-  const html = items.map(it =>
-    `<div class="ticker-item">
-      <span class="t-name">${it.name}</span>
-      <span class="t-val">${it.val}</span>
-      ${trendIcon(it.trend)}
-    </div>`
-  ).join('');
-
-  // Duplicate for seamless infinite scroll
-  qs('ticker-content').innerHTML = html + html;
-  qs('ticker-bar').classList.add('show');
-}
-
-// ════════════════════════════════════════════════
 // TODAY'S TIP
 // ════════════════════════════════════════════════
 
