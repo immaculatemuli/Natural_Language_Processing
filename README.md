@@ -1,4 +1,4 @@
-# Natural Language Processing with Deep Learning — BIT4133
+# Natural Language Processing with Deep Learning - BIT4133
 
 **Student:** Immaculate Mutheu Muli  
 **Reg No:** BSCCS/2024/33678  
@@ -8,7 +8,7 @@
 
 ---
 
-## Project — CBK Report Analyser
+## Project - CBK Report Analyser
 
 An NLP system that analyses the **Central Bank of Kenya (CBK) Annual Report 2024/25** using text processing, language modeling, sequence labeling, word embeddings, and deep learning techniques.
 
